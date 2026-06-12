@@ -1,0 +1,169 @@
+// products.controller.ts
+import { Request, Response } from "express";
+import { ProductsService } from "./product.service";
+import { ProductParams } from "../../types";
+import { uploadImage } from "../../utils/cloudinary";
+import { NewProduct } from "../../db/schema";
+import { isUUID } from "../../utils/is-uuid";
+
+export class ProductsController {
+  constructor(private service: ProductsService) {}
+
+  create = async (req: Request, res: Response) => {
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (!files || !files.length)
+      return res.status(400).json({ message: "Upload at least one image" });
+
+    const imageUrls = await Promise.all(
+      files.map((file, idx) =>
+        uploadImage(file.buffer, `product-${Date.now()}-${idx}`),
+      ),
+    );
+
+    const body = JSON.parse(req.body.data ?? "{}") as any;
+
+    const input = body;
+    if (req.vendor) {
+      input.vendorId = req.vendor.id;
+    }
+
+    console.log("Input from client:", input);
+    console.log("Image URLs:", imageUrls);
+
+    const product = await this.service.create(input, imageUrls);
+    return res.status(201).json({ success: true, message: "Product created successfully", data: product });
+  };
+
+  list = async (req: Request, res: Response) => {
+    const filters = req.query as ProductParams;
+
+    if (filters.storage) filters.storage = Number(filters.storage);
+
+    console.log("Filter:", filters);
+    const rows = await this.service.list(filters);
+    if (!rows.length)
+      return res.status(404).json({ message: "No products found" });
+
+    return res.status(200).json({
+      success: true,
+      message: "Products retrieved successfully",
+      data: rows,
+    });
+  };
+
+  getOne = async (req: Request, res: Response) => {
+    const identifier = Array.isArray(req.params.identifier)
+      ? req.params.identifier[0]
+      : req.params.identifier;
+
+    const isUuidValue = isUUID(identifier);
+
+    try {
+      const product = isUuidValue
+        ? await this.service.getById(identifier)
+        : await this.service.getBySlug(identifier);
+
+      return res.status(200).json({
+        success: true,
+        message: "Product retrieved successfully",
+        data: product,
+      });
+    } catch (e: any) {
+      const code = e?.statusCode ?? 500;
+      return res.status(code).json({ message: e?.message ?? "Server error" });
+    }
+  };
+
+  getBySlug = async (req: Request, res: Response) => {
+    try {
+      const product = await this.service.getBySlug(String(req.params.slug));
+      return res.status(200).json({
+        success: true,
+        message: "Product retrieved successfully",
+        data: product,
+      });
+    } catch (e: any) {
+      const code = e?.statusCode ?? 500;
+      return res.status(code).json({ message: e?.message ?? "Server error" });
+    }
+  };
+
+  getById = async (req: Request, res: Response) => {
+    try {
+      const product = await this.service.getById(String(req.params.id));
+      return res.status(200).json({
+        success: true,
+        message: "Product retrieved successfully",
+        data: product,
+      });
+    } catch (e: any) {
+      const code = e?.statusCode ?? 500;
+      return res.status(code).json({ message: e?.message ?? "Server error" });
+    }
+  };
+
+  delete_image = async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const imageId = String(req.params.imageId);
+
+      await this.service.delete_image(id, imageId);
+      return res.status(200).json({
+        success: true,
+        message: "Image deleted successfully",
+      });
+    } catch (e: any) {
+      const code = e?.statusCode ?? 500;
+      return res.status(code).json({ message: e?.message ?? "Server error" });
+    }
+  };
+
+  update = async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const body = req.body as any;
+
+      const updated = await this.service.update(id, {
+        title: body.title,
+        description: body.description,
+        categoryId: body.categoryId,
+        brandId: body.brandId,
+        price: body.price !== undefined ? Number(body.price) : undefined,
+        stock: body.stock !== undefined ? Number(body.stock) : undefined,
+        isFeatured:
+          body.isFeatured !== undefined
+            ? body.isFeatured === "true" || body.isFeatured === true
+            : undefined,
+        isBestSeller:
+          body.isBestSeller !== undefined
+            ? body.isBestSeller === "true" || body.isBestSeller === true
+            : undefined,
+        isNewArrival:
+          body.isNewArrival !== undefined
+            ? body.isNewArrival === "true" || body.isNewArrival === true
+            : undefined,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Product updated successfully",
+        data: updated,
+      });
+    } catch (e: any) {
+      const code = e?.statusCode ?? 500;
+      return res.status(code).json({ message: e?.message ?? "Server error" });
+    }
+  };
+
+  delete = async (req: Request, res: Response) => {
+    try {
+      await this.service.delete(String(req.params.id));
+      return res
+        .status(200)
+        .json({ success: true, message: "Product deleted successfully" });
+    } catch (e: any) {
+      const code = e?.statusCode ?? 500;
+      return res.status(code).json({ message: e?.message ?? "Server error" });
+    }
+  };
+}

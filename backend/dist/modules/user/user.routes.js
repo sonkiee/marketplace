@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+// import { updateProfile, getProfile } from "../controllers/user.controller";
+// import { protect, admin } from "../middleware/auth.middleware";
+// import { authLimiter } from "../config/limiter";
+// import { newAddress, getAddress } from "../controllers/location.controller";
+const auth_middleware_1 = require("../../middleware/auth.middleware");
+const user_service_1 = require("./user.service");
+const user_controller_1 = require("./user.controller");
+const address_controller_1 = require("../address/address.controller");
+const address_service_1 = require("../address/address.service");
+const router = express_1.default.Router();
+const userController = new user_controller_1.UserController(new user_service_1.UserService());
+const adddressController = new address_controller_1.AddressController(new address_service_1.AddressService());
+router.get("/profile", auth_middleware_1.protect, userController.getProfile);
+router.get("/address", auth_middleware_1.protect, adddressController.getMyAddresses);
+// router.put("/profile", protect, updateProfile);
+// router.post("/profile/address", protect, newAddress);
+// router.get("/profile/address", protect, getAddress);
+exports.default = router;

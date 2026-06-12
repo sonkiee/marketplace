@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Rakayar",
+    "slug": "rakayar",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splashy.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF002C"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sonkey.rakayar"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.sonkey.rakayar"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a5b25125-58da-4245-8d59-7e7176a57484"
+      }
+    },
+    "owner": "sonkey",
+    "updates": {
+      "url": "https://u.expo.dev/a5b25125-58da-4245-8d59-7e7176a57484"
+    },
+    "runtimeVersion": "1.0.0"
+  }
+}
